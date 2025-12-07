@@ -67,6 +67,16 @@ Scan the project directory to identify:
 
 ### Phase 2: Generate real.md
 
+> **Recommendation**: Most projects should use the **simple format**. Only use the detailed format when you need to distinguish required/optional constraints or provide detailed explanations.
+
+**Template Files**:
+- Simple format (recommended): [real-template-simple.md](./template/real-template-simple.md)
+- Detailed format: [real-template-detailed.md](./template/real-template-detailed.md)
+
+**Example Files**:
+- Simple format examples: [real-example-simple.md](./example/real-example-simple.md)
+- Detailed format example: [real-example-detailed.md](./example/real-example-detailed.md)
+
 <real-md-template>
 
 **Format**: Markdown + XML semantic closure tags
@@ -140,6 +150,16 @@ Scan the project directory to identify:
 **Key Rule**: Focus on constraints that **AI might not anticipate** but would cause **real-world damage** if violated.
 
 ### Phase 3: Generate cog.md
+
+> **Recommendation**: Most projects should use the **simple format**. Only use the detailed format when you need more detailed attribute definitions and complex relationships.
+
+**Template Files**:
+- Simple format (recommended): [cog-template-simple.md](./template/cog-template-simple.md)
+- Detailed format: [cog-template-detailed.md](./template/cog-template-detailed.md)
+
+**Example Files**:
+- Simple format example: [cog-example-simple.md](./example/cog-example-simple.md)
+- Detailed format example: [cog-example-detailed.md](./example/cog-example-detailed.md)
 
 <cog-md-template>
 

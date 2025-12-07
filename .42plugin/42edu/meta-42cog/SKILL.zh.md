@@ -67,6 +67,16 @@ Real（现实约束）→ Cog（认知模型）→ Spec（规约文档）→ Wor
 
 ### 阶段二：生成 real.md
 
+> **推荐**：大多数项目推荐使用**简明写法**。仅在需要区分必选/可选约束，或需要详细说明时使用详细写法。
+
+**模板文件**：
+- 简明写法（推荐）：[real-template-simple.md](./template/real-template-simple.md)
+- 详细写法：[real-template-detailed.md](./template/real-template-detailed.md)
+
+**示例文件**：
+- 简明写法示例：[real-example-simple.md](./example/real-example-simple.md)
+- 详细写法示例：[real-example-detailed.md](./example/real-example-detailed.md)
+
 <real-md-template>
 
 **格式**：Markdown + XML语义闭合标签
@@ -140,6 +150,16 @@ Real（现实约束）→ Cog（认知模型）→ Spec（规约文档）→ Wor
 **关键规则**：聚焦于**AI可能无法预料**但违反后会造成**现实损害**的约束。
 
 ### 阶段三：生成 cog.md
+
+> **推荐**：大多数项目推荐使用**简明写法**。仅在需要更详细的属性定义和复杂关系时使用详细写法。
+
+**模板文件**：
+- 简明写法（推荐）：[cog-template-simple.md](./template/cog-template-simple.md)
+- 详细写法：[cog-template-detailed.md](./template/cog-template-detailed.md)
+
+**示例文件**：
+- 简明写法示例：[cog-example-simple.md](./example/cog-example-simple.md)
+- 详细写法示例：[cog-example-detailed.md](./example/cog-example-detailed.md)
 
 <cog-md-template>
 
