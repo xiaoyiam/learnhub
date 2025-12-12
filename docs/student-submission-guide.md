@@ -16,7 +16,7 @@
 
 ### 1.2 确认加入成功
 
-- 加入后，访问：https://cloudnative.build/42edu/42aipr001
+- 加入后，访问：https://cnb.cool/42edu/42aipr001
 - 确认你能看到 `project-template-student` 仓库
 
 ---
@@ -27,7 +27,7 @@
 
 ```bash
 # 克隆仓库（请替换成实际的仓库地址）
-git clone https://cloudnative.build/42edu/42aipr001/project-template-student.git
+git clone https://cnb.cool/42edu/42aipr001/project-template-student.git
 
 # 进入项目目录
 cd project-template-student
@@ -104,25 +104,34 @@ git push
 
 ---
 
-## 🔀 第六步：创建Pull Request（合并请求）
+## 🔀 第六步：创建合并请求（可选）
+
+> **注意**：创建合并请求是**可选步骤**。如果讲师没有特别要求，你只需要将代码推送到你的个人分支即可，讲师会直接查看你的分支内容。
 
 ### 6.1 访问仓库页面
 
 在浏览器中打开：
 ```
-https://cloudnative.build/42edu/42aipr001/project-template-student
+https://cnb.cool/42edu/42aipr001/project-template-student
 ```
 
-### 6.2 创建Pull Request
+### 6.2 创建合并请求
+
+> ⚠️ **重要警告**：
+> - **不要**将合并请求的目标分支设为 `main`
+> - 如需创建合并请求，请联系讲师确认目标分支
+> - 学生作业**不会**被合并到 main 分支
+
+如果讲师要求创建合并请求：
 
 1. 点击页面上的**"合并请求"**标签
 2. 点击**"新建合并请求"**按钮
 3. 配置合并请求：
    - **源分支**：选择你的分支（如 `student-张三`）
-   - **目标分支**：选择 `main`
+   - **目标分支**：**请向讲师确认**（通常不是 main）
 4. 填写标题和描述：
    ```
-   标题：[你的姓名] 第X次作业提交
+   标题：[WIP][你的姓名] 第X次作业提交
 
    描述：
    - 完成了XXX功能
@@ -130,6 +139,8 @@ https://cloudnative.build/42edu/42aipr001/project-template-student
    - 遇到的问题和解决方案...
    ```
 5. 点击**"创建合并请求"**
+
+> 💡 **提示**：标题中的 `[WIP]` 表示 "Work In Progress"（进行中），可以防止意外合并。
 
 ### 6.3 等待审核
 
@@ -268,6 +279,7 @@ git merge main
 
 ### ❌ 千万不要：
 - 直接在main分支上提交代码
+- 创建目标分支为 main 的合并请求
 - 删除或修改其他同学的分支
 - 提交包含敏感信息的代码（密码、密钥等）
 - 复制粘贴其他同学的代码
@@ -278,7 +290,7 @@ git merge main
 
 - **Git基础教程**：https://www.runoob.com/git/git-tutorial.html
 - **Git可视化学习**：https://learngitbranching.js.org/?locale=zh_CN
-- **CNB平台文档**：https://cloudnative.build/docs
+- **CNB平台文档**：https://cnb.cool/docs
 
 ---
 
