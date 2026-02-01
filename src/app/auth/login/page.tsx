@@ -20,12 +20,17 @@ function LoginForm() {
     setError('');
 
     try {
+      console.log('Attempting login for:', email);
       await signIn(email, password);
+      console.log('Login successful, redirecting...');
       // 跳转到 redirect 参数指定的页面，或默认首页
       const redirectTo = searchParams.get('redirect') || '/';
       router.push(redirectTo);
+      router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : '登录失败，请重试');
+      console.error('Login error:', err);
+      const errorMessage = err instanceof Error ? err.message : '登录失败，请重试';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
