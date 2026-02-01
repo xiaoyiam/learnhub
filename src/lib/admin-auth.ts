@@ -1,7 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { getSession } from '@/lib/auth';
+import { getServerSession } from '@/lib/auth-server';
 import { db } from '@/db';
 import { userProfiles } from '@/db/schema';
 import { eq } from 'drizzle-orm';
@@ -11,7 +11,7 @@ import { eq } from 'drizzle-orm';
  * 非管理员将被重定向到首页
  */
 export async function requireAdmin() {
-  const session = await getSession();
+  const session = await getServerSession();
 
   if (!session?.user) {
     redirect('/auth/login?redirect=/admin');
@@ -32,7 +32,7 @@ export async function requireAdmin() {
  * 检查用户是否为管理员（不重定向，返回布尔值）
  */
 export async function isAdmin(): Promise<boolean> {
-  const session = await getSession();
+  const session = await getServerSession();
 
   if (!session?.user) {
     return false;

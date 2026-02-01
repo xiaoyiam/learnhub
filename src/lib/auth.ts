@@ -1,14 +1,11 @@
 /**
- * Neon Auth 工具函数
+ * Neon Auth 工具函数（客户端）
  *
  * Neon Auth 基于 Better Auth，提供 REST API
  * 文档: https://www.better-auth.com/docs/api-reference
  */
 
-import { cookies } from 'next/headers';
-
 const AUTH_BASE_URL = process.env.NEXT_PUBLIC_NEON_AUTH_URL!;
-const SESSION_COOKIE_NAME = 'learnhub_session';
 
 export interface User {
   id: string;
@@ -85,32 +82,18 @@ export async function signOut(): Promise<void> {
 }
 
 /**
- * 获取当前会话（服务器端）
- * 从我们域名的 cookie 中读取 session token，然后向 Neon Auth 验证
+ * 获取当前会话（客户端）
+ * 使用 credentials: include 让浏览器自动发送 cookies
  */
 export async function getSession(): Promise<AuthResponse | null> {
   try {
-    // 检查环境变量
     if (!AUTH_BASE_URL) {
       console.error('NEXT_PUBLIC_NEON_AUTH_URL is not configured');
       return null;
     }
 
-    // 服务器端：读取我们存储的 session token
-    let sessionToken = '';
-    try {
-      const cookieStore = await cookies();
-      sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value || '';
-    } catch {
-      // 客户端调用时 cookies() 会失败
-    }
-
-    // 使用 token 向 Neon Auth 验证会话
     const response = await fetch(`${AUTH_BASE_URL}/get-session`, {
       method: 'GET',
-      headers: sessionToken ? {
-        'Authorization': `Bearer ${sessionToken}`,
-      } : {},
       credentials: 'include',
       cache: 'no-store',
     });
@@ -121,7 +104,6 @@ export async function getSession(): Promise<AuthResponse | null> {
 
     const data = await response.json();
 
-    // 安全检查
     if (!data || typeof data !== 'object') {
       return null;
     }
@@ -132,4 +114,3 @@ export async function getSession(): Promise<AuthResponse | null> {
     return null;
   }
 }
-

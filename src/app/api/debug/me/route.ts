@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
+import { getServerSession } from '@/lib/auth-server';
 import { db } from '@/db';
 import { userProfiles } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 
 export async function GET() {
   try {
-    const session = await getSession();
+    const session = await getServerSession();
 
     if (!session?.user) {
       return NextResponse.json({

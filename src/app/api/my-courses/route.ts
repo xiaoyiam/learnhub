@@ -1,14 +1,13 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { db } from '@/db';
 import { licenses, courses, userProgress, chapters } from '@/db/schema';
 import { eq, and, inArray, sql } from 'drizzle-orm';
-import { getSession } from '@/lib/auth';
+import { getServerSession } from '@/lib/auth-server';
 
 export async function GET() {
   try {
     // 获取用户会话
-    const session = await getSession();
+    const session = await getServerSession();
 
     if (!session?.user) {
       return NextResponse.json({ courses: [] });

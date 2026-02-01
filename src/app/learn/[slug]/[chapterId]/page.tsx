@@ -4,7 +4,7 @@ import { db } from '@/db';
 import { courses } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { checkCourseAccess } from '@/lib/actions/order';
-import { getSession } from '@/lib/auth';
+import { getServerSession } from '@/lib/auth-server';
 import { VideoPlayer } from './video-player';
 import { ArticleViewer } from './article-viewer';
 import { ChapterList } from './chapter-list';
@@ -36,7 +36,7 @@ export default async function ChapterPage({ params }: Props) {
   }
 
   // 检查访问权限
-  const session = await getSession();
+  const session = await getServerSession();
   let hasAccess = false;
   let accessType: 'free' | 'course' | 'membership' | null = null;
 

@@ -5,7 +5,7 @@ import { siteSettings, orders, orderItems, licenses, userProfiles, courses, memb
 import { eq, and } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '@/lib/admin-auth';
-import { getSession } from '@/lib/auth';
+import { getServerSession } from '@/lib/auth-server';
 import { EmailService, formatEmailDate, formatEmailAmount } from '@/lib/email';
 
 // ============ 支付设置类型 ============
@@ -74,7 +74,7 @@ export async function updatePaymentSettings(data: PaymentSettings) {
 // ============ 用户提交已支付 ============
 
 export async function submitPaymentConfirmation(orderId: string, paymentMethod: 'wechat' | 'alipay') {
-  const session = await getSession();
+  const session = await getServerSession();
   if (!session?.user) {
     return { error: '请先登录' };
   }
@@ -278,7 +278,7 @@ export async function getPendingConfirmOrders() {
 // ============ 获取订单详情（用于支付页面）============
 
 export async function getOrderForPayment(orderId: string) {
-  const session = await getSession();
+  const session = await getServerSession();
   if (!session?.user) {
     return null;
   }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
+import { getServerSession } from '@/lib/auth-server';
 import { isAdmin } from '@/lib/admin-auth';
 import {
   getOSSConfig,
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
 
   try {
     // 验证登录和权限
-    const session = await getSession();
+    const session = await getServerSession();
     if (!session?.user) {
       return NextResponse.json({ error: '请先登录' }, { status: 401 });
     }
