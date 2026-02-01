@@ -5,6 +5,8 @@
  * 文档: https://www.better-auth.com/docs/api-reference
  */
 
+import { cookies } from 'next/headers';
+
 const AUTH_BASE_URL = process.env.NEXT_PUBLIC_NEON_AUTH_URL!;
 
 export interface User {
@@ -82,7 +84,8 @@ export async function signOut(): Promise<void> {
 }
 
 /**
- * 获取当前会话
+ * 获取当前会话（服务器端）
+ * 从请求中读取 cookies 并转发给 Neon Auth
  */
 export async function getSession(): Promise<AuthResponse | null> {
   try {
@@ -92,8 +95,20 @@ export async function getSession(): Promise<AuthResponse | null> {
       return null;
     }
 
+    // 服务器端：读取并转发 cookies
+    let cookieHeader = '';
+    try {
+      const cookieStore = await cookies();
+      cookieHeader = cookieStore.getAll()
+        .map(c => `${c.name}=${c.value}`)
+        .join('; ');
+    } catch {
+      // 客户端调用时 cookies() 会失败，使用 credentials: include
+    }
+
     const response = await fetch(`${AUTH_BASE_URL}/get-session`, {
       method: 'GET',
+      headers: cookieHeader ? { Cookie: cookieHeader } : {},
       credentials: 'include',
       cache: 'no-store',
     });
