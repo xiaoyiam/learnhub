@@ -30,25 +30,39 @@ export async function getServerSession(): Promise<AuthResponse | null> {
     }
 
     // 使用 token 向 Neon Auth 验证会话
+    // Better Auth 期望 session token 作为 cookie 发送
     const response = await fetch(`${AUTH_BASE_URL}/get-session`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${sessionToken}`,
+        'Cookie': `better-auth.session_token=${sessionToken}`,
       },
       cache: 'no-store',
     });
 
+    console.log('Neon Auth response status:', response.status);
+
     if (!response.ok) {
+      const text = await response.text();
+      console.log('Neon Auth error response:', text);
       return null;
     }
 
     const data = await response.json();
+    console.log('Neon Auth session data:', JSON.stringify(data));
 
     if (!data || typeof data !== 'object') {
       return null;
     }
 
-    return data.session ? data : null;
+    // Better Auth 返回格式可能是 { user, session } 或直接 { user }
+    if (data.user) {
+      return {
+        user: data.user,
+        session: data.session || { token: sessionToken },
+      } as AuthResponse;
+    }
+
+    return null;
   } catch (error) {
     console.error('Failed to get server session:', error);
     return null;
