@@ -36,18 +36,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     const result = await authSignIn(email, password);
+    console.log('Login result:', JSON.stringify(result, null, 2));
     // 保存 session token 到我们域名的 cookie
-    if (result.session?.token) {
-      await saveSessionToken(result.session.token);
+    // Better Auth 可能返回 token 或 session.token
+    const token = result.session?.token || (result as unknown as { token?: string }).token;
+    if (token) {
+      console.log('Saving session token...');
+      await saveSessionToken(token);
+    } else {
+      console.warn('No token found in login response');
     }
     setUser(result.user);
   };
 
   const signUp = async (email: string, password: string, name: string) => {
     const result = await authSignUp(email, password, name);
+    console.log('Signup result:', JSON.stringify(result, null, 2));
     // 保存 session token 到我们域名的 cookie
-    if (result.session?.token) {
-      await saveSessionToken(result.session.token);
+    const token = result.session?.token || (result as unknown as { token?: string }).token;
+    if (token) {
+      await saveSessionToken(token);
     }
     setUser(result.user);
   };
