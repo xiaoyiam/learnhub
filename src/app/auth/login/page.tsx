@@ -14,7 +14,12 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // 调试：检查环境变量
+  const authUrl = process.env.NEXT_PUBLIC_NEON_AUTH_URL;
+  console.log('Auth URL configured:', authUrl ? 'Yes' : 'No', authUrl);
+
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log('=== Form submitted ===');
     e.preventDefault();
     setLoading(true);
     setError('');
@@ -38,6 +43,11 @@ function LoginForm() {
 
   return (
     <>
+      {!authUrl && (
+        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 text-yellow-700 rounded-lg text-sm">
+          警告: NEXT_PUBLIC_NEON_AUTH_URL 环境变量未配置
+        </div>
+      )}
       {error && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
           {error}
