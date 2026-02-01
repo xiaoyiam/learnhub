@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, getSession, signIn as authSignIn, signUp as authSignUp, signOut as authSignOut } from './auth';
-import { saveSessionToken, clearSessionToken } from './actions/auth-actions';
+import { saveSession, clearSession } from './actions/auth-actions';
 
 interface AuthContextType {
   user: User | null;
@@ -36,33 +36,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     const result = await authSignIn(email, password);
-    console.log('Login result:', JSON.stringify(result, null, 2));
-    // 保存 session token 到我们域名的 cookie
-    // Better Auth 可能返回 token 或 session.token
-    const token = result.session?.token || (result as unknown as { token?: string }).token;
-    if (token) {
-      console.log('Saving session token...');
-      await saveSessionToken(token);
-    } else {
-      console.warn('No token found in login response');
+    // 获取用户和 token
+    const user = result.user || (result as unknown as { user: User }).user;
+    const token = result.session?.token || (result as unknown as { token?: string }).token || '';
+
+    // 保存用户会话到 cookie
+    if (user) {
+      await saveSession(
+        { id: user.id, email: user.email, name: user.name },
+        token
+      );
     }
-    setUser(result.user);
+    setUser(user);
   };
 
   const signUp = async (email: string, password: string, name: string) => {
     const result = await authSignUp(email, password, name);
-    console.log('Signup result:', JSON.stringify(result, null, 2));
-    // 保存 session token 到我们域名的 cookie
-    const token = result.session?.token || (result as unknown as { token?: string }).token;
-    if (token) {
-      await saveSessionToken(token);
+    const user = result.user || (result as unknown as { user: User }).user;
+    const token = result.session?.token || (result as unknown as { token?: string }).token || '';
+
+    if (user) {
+      await saveSession(
+        { id: user.id, email: user.email, name: user.name },
+        token
+      );
     }
-    setUser(result.user);
+    setUser(user);
   };
 
   const signOut = async () => {
     await authSignOut();
-    await clearSessionToken();
+    await clearSession();
     setUser(null);
   };
 
