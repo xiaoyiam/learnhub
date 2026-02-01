@@ -41,7 +41,7 @@ export function CheckoutForm({ product }: Props) {
       }
 
       if ('error' in result) {
-        setError(result.error);
+        setError(result.error || '订单创建失败');
         setLoading(false);
         return;
       }
@@ -50,7 +50,7 @@ export function CheckoutForm({ product }: Props) {
       const payResult = await simulatePayment(result.orderId, paymentMethod);
 
       if ('error' in payResult) {
-        setError(payResult.error);
+        setError(payResult.error || '支付失败');
         setLoading(false);
         return;
       }

@@ -6,7 +6,7 @@ interface Chapter {
   id: string;
   title: string;
   duration: number | null;
-  isFree: boolean;
+  isFree: boolean | null;
 }
 
 interface Props {
@@ -29,7 +29,7 @@ export function ChapterList({ chapters, currentChapterId, slug, hasFullAccess }:
       <div className="flex-1 overflow-y-auto">
         {chapters.map((chapter, index) => {
           const isActive = chapter.id === currentChapterId;
-          const canAccess = hasFullAccess || chapter.isFree;
+          const canAccess = hasFullAccess || chapter.isFree === true;
 
           return (
             <Link
@@ -68,7 +68,7 @@ export function ChapterList({ chapters, currentChapterId, slug, hasFullAccess }:
                 </div>
                 <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
                   {chapter.duration && <span>{chapter.duration} 分钟</span>}
-                  {chapter.isFree && (
+                  {chapter.isFree === true && (
                     <span className="px-1.5 py-0.5 bg-green-600 bg-opacity-20 text-green-400 rounded">
                       试看
                     </span>
