@@ -8,6 +8,7 @@
 import { cookies } from 'next/headers';
 
 const AUTH_BASE_URL = process.env.NEXT_PUBLIC_NEON_AUTH_URL!;
+const SESSION_COOKIE_NAME = 'learnhub_session';
 
 export interface User {
   id: string;
@@ -85,7 +86,7 @@ export async function signOut(): Promise<void> {
 
 /**
  * 获取当前会话（服务器端）
- * 从请求中读取 cookies 并转发给 Neon Auth
+ * 从我们域名的 cookie 中读取 session token，然后向 Neon Auth 验证
  */
 export async function getSession(): Promise<AuthResponse | null> {
   try {
@@ -95,20 +96,21 @@ export async function getSession(): Promise<AuthResponse | null> {
       return null;
     }
 
-    // 服务器端：读取并转发 cookies
-    let cookieHeader = '';
+    // 服务器端：读取我们存储的 session token
+    let sessionToken = '';
     try {
       const cookieStore = await cookies();
-      cookieHeader = cookieStore.getAll()
-        .map(c => `${c.name}=${c.value}`)
-        .join('; ');
+      sessionToken = cookieStore.get(SESSION_COOKIE_NAME)?.value || '';
     } catch {
-      // 客户端调用时 cookies() 会失败，使用 credentials: include
+      // 客户端调用时 cookies() 会失败
     }
 
+    // 使用 token 向 Neon Auth 验证会话
     const response = await fetch(`${AUTH_BASE_URL}/get-session`, {
       method: 'GET',
-      headers: cookieHeader ? { Cookie: cookieHeader } : {},
+      headers: sessionToken ? {
+        'Authorization': `Bearer ${sessionToken}`,
+      } : {},
       credentials: 'include',
       cache: 'no-store',
     });
@@ -130,3 +132,4 @@ export async function getSession(): Promise<AuthResponse | null> {
     return null;
   }
 }
+

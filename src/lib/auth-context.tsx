@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, getSession, signIn as authSignIn, signUp as authSignUp, signOut as authSignOut } from './auth';
+import { saveSessionToken, clearSessionToken } from './actions/auth-actions';
 
 interface AuthContextType {
   user: User | null;
@@ -35,16 +36,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     const result = await authSignIn(email, password);
+    // 保存 session token 到我们域名的 cookie
+    if (result.session?.token) {
+      await saveSessionToken(result.session.token);
+    }
     setUser(result.user);
   };
 
   const signUp = async (email: string, password: string, name: string) => {
     const result = await authSignUp(email, password, name);
+    // 保存 session token 到我们域名的 cookie
+    if (result.session?.token) {
+      await saveSessionToken(result.session.token);
+    }
     setUser(result.user);
   };
 
   const signOut = async () => {
     await authSignOut();
+    await clearSessionToken();
     setUser(null);
   };
 
