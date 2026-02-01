@@ -5,6 +5,7 @@ import Link from 'next/link';
 interface Chapter {
   id: string;
   title: string;
+  type: 'video' | 'article';
   duration: number | null;
   isFree: boolean | null;
 }
@@ -54,12 +55,12 @@ export function ChapterList({ chapters, currentChapterId, slug, hasFullAccess }:
                 className={`
                   w-8 h-8 rounded-full flex items-center justify-center text-sm
                   ${isActive
-                    ? 'bg-blue-600 text-white'
+                    ? chapter.type === 'article' ? 'bg-purple-600 text-white' : 'bg-blue-600 text-white'
                     : 'bg-gray-700 text-gray-400'
                   }
                 `}
               >
-                {isActive ? '▶' : index + 1}
+                {isActive ? (chapter.type === 'article' ? '📖' : '▶') : index + 1}
               </div>
 
               <div className="flex-1 min-w-0">
@@ -67,6 +68,13 @@ export function ChapterList({ chapters, currentChapterId, slug, hasFullAccess }:
                   {chapter.title}
                 </div>
                 <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                  <span className={`px-1.5 py-0.5 rounded ${
+                    chapter.type === 'article'
+                      ? 'bg-purple-600 bg-opacity-20 text-purple-400'
+                      : 'bg-blue-600 bg-opacity-20 text-blue-400'
+                  }`}>
+                    {chapter.type === 'article' ? '图文' : '视频'}
+                  </span>
                   {chapter.duration && <span>{chapter.duration} 分钟</span>}
                   {chapter.isFree === true && (
                     <span className="px-1.5 py-0.5 bg-green-600 bg-opacity-20 text-green-400 rounded">

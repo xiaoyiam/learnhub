@@ -183,7 +183,9 @@ export async function getChapter(id: string) {
 export async function createChapter(courseId: string, data: {
   title: string;
   description?: string;
-  videoUrl: string;
+  type?: 'video' | 'article';
+  videoUrl?: string;
+  content?: string;
   duration: number;
   isFree: boolean;
 }) {
@@ -201,7 +203,9 @@ export async function createChapter(courseId: string, data: {
     courseId,
     title: data.title,
     description: data.description || null,
-    videoUrl: data.videoUrl,
+    type: data.type || 'video',
+    videoUrl: data.videoUrl || null,
+    content: data.content || null,
     duration: data.duration,
     isFree: data.isFree,
     sortOrder: maxOrder + 1,
@@ -222,7 +226,9 @@ export async function createChapter(courseId: string, data: {
 export async function updateChapter(id: string, data: {
   title?: string;
   description?: string;
+  type?: 'video' | 'article';
   videoUrl?: string;
+  content?: string;
   duration?: number;
   isFree?: boolean;
 }) {

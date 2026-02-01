@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { createChapter, updateChapter } from '@/lib/actions/admin';
+import { FileUpload } from '@/components/file-upload';
+import { MarkdownEditor } from '@/components/markdown-editor';
 import type { Chapter } from '@/db/schema';
 
 interface ChapterFormProps {
@@ -19,12 +21,14 @@ export default function ChapterForm({ courseId, chapter, mode, onSuccess, onCanc
   const [formData, setFormData] = useState({
     title: chapter?.title || '',
     description: chapter?.description || '',
+    type: (chapter?.type as 'video' | 'article') || 'video',
     videoUrl: chapter?.videoUrl || '',
+    content: chapter?.content || '',
     duration: chapter?.duration?.toString() || '',
     isFree: chapter?.isFree || false,
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -39,30 +43,38 @@ export default function ChapterForm({ courseId, chapter, mode, onSuccess, onCanc
 
     const durationNum = parseInt(formData.duration) || 0;
 
-    try {
-      if (mode === 'create') {
-        const result = await createChapter(courseId, {
-          title: formData.title,
-          description: formData.description || undefined,
-          videoUrl: formData.videoUrl,
-          duration: durationNum,
-          isFree: formData.isFree,
-        });
+    // 验证
+    if (formData.type === 'video' && !formData.videoUrl) {
+      setError('请填写视频 URL');
+      setLoading(false);
+      return;
+    }
+    if (formData.type === 'article' && !formData.content) {
+      setError('请填写图文内容');
+      setLoading(false);
+      return;
+    }
 
+    try {
+      const chapterData = {
+        title: formData.title,
+        description: formData.description || undefined,
+        type: formData.type as 'video' | 'article',
+        videoUrl: formData.type === 'video' ? formData.videoUrl : undefined,
+        content: formData.type === 'article' ? formData.content : undefined,
+        duration: durationNum,
+        isFree: formData.isFree,
+      };
+
+      if (mode === 'create') {
+        const result = await createChapter(courseId, chapterData);
         if ('error' in result) {
           setError(result.error as string);
         } else {
           onSuccess();
         }
       } else if (chapter) {
-        const result = await updateChapter(chapter.id, {
-          title: formData.title,
-          description: formData.description || undefined,
-          videoUrl: formData.videoUrl,
-          duration: durationNum,
-          isFree: formData.isFree,
-        });
-
+        const result = await updateChapter(chapter.id, chapterData);
         if ('error' in result) {
           setError(result.error as string);
         } else {
@@ -84,24 +96,41 @@ export default function ChapterForm({ courseId, chapter, mode, onSuccess, onCanc
         </div>
       )}
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          章节标题 *
-        </label>
-        <input
-          type="text"
-          name="title"
-          value={formData.title}
-          onChange={handleChange}
-          required
-          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-          placeholder="输入章节标题"
-        />
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            章节标题 *
+          </label>
+          <input
+            type="text"
+            name="title"
+            value={formData.title}
+            onChange={handleChange}
+            required
+            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+            placeholder="输入章节标题"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            章节类型 *
+          </label>
+          <select
+            name="type"
+            value={formData.type}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+          >
+            <option value="video">视频课程</option>
+            <option value="article">图文课程</option>
+          </select>
+        </div>
       </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          章节描述
+          章节简介
         </label>
         <textarea
           name="description"
@@ -113,35 +142,47 @@ export default function ChapterForm({ courseId, chapter, mode, onSuccess, onCanc
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          视频 URL *
-        </label>
-        <input
-          type="url"
-          name="videoUrl"
-          value={formData.videoUrl}
-          onChange={handleChange}
-          required
-          className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-          placeholder="https://example.com/video.mp4"
-        />
-      </div>
+      {/* 视频类型内容 */}
+      {formData.type === 'video' && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            视频 *
+          </label>
+          <FileUpload
+            type="video"
+            value={formData.videoUrl}
+            onChange={(url) => setFormData(prev => ({ ...prev, videoUrl: url }))}
+          />
+        </div>
+      )}
+
+      {/* 图文类型内容 */}
+      {formData.type === 'article' && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            图文内容 *
+          </label>
+          <MarkdownEditor
+            value={formData.content}
+            onChange={(content) => setFormData(prev => ({ ...prev, content }))}
+            minHeight="250px"
+          />
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            时长 (分钟) *
+            预计时长 (分钟)
           </label>
           <input
             type="number"
             name="duration"
             value={formData.duration}
             onChange={handleChange}
-            required
             min="0"
             className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-            placeholder="例如: 15"
+            placeholder={formData.type === 'video' ? '视频时长' : '阅读时长'}
           />
         </div>
 

@@ -120,6 +120,12 @@ export const licenseTypeEnum = pgEnum('license_type', [
   'trial',        // 试用授权
 ]);
 
+// 章节类型
+export const chapterTypeEnum = pgEnum('chapter_type', [
+  'video',        // 视频课程
+  'article',      // 图文课程
+]);
+
 // ============================================================================
 // 用户相关表
 // ============================================================================
@@ -211,9 +217,11 @@ export const chapters = pgTable('chapters', {
     .references(() => courses.id, { onDelete: 'cascade' }),
   title: varchar('title', { length: 200 }).notNull(),
   description: text('description'),
+  type: chapterTypeEnum('type').default('video').notNull(),  // 章节类型
   sortOrder: integer('sort_order').default(0).notNull(),
   duration: integer('duration'),  // 时长（分钟）
   videoUrl: varchar('video_url', { length: 500 }),
+  content: text('content'),  // 图文内容（Markdown）
   isFree: boolean('is_free').default(false),  // 是否可试看
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -485,6 +493,52 @@ export const siteSettings = pgTable('site_settings', {
 ]);
 
 // ============================================================================
+// 安全审计日志表
+// ============================================================================
+
+/**
+ * 审计日志严重级别
+ */
+export const auditSeverityEnum = pgEnum('audit_severity', [
+  'info',
+  'warning',
+  'error',
+  'critical',
+]);
+
+/**
+ * 审计日志表
+ * 记录系统中的安全相关事件
+ */
+export const auditLogs = pgTable('audit_logs', {
+  id: uuid('id').default(sql`gen_random_uuid()`).primaryKey(),
+
+  // 事件信息
+  action: varchar('action', { length: 50 }).notNull(),
+  severity: auditSeverityEnum('severity').default('info').notNull(),
+
+  // 用户和来源
+  userId: uuid('user_id'),
+  ip: varchar('ip', { length: 45 }),  // 支持 IPv6
+  userAgent: text('user_agent'),
+
+  // 资源信息
+  resourceType: varchar('resource_type', { length: 50 }),
+  resourceId: uuid('resource_id'),
+
+  // 详细信息（JSON）
+  details: jsonb('details'),
+
+  // 时间戳
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => [
+  index('audit_logs_user_id_idx').on(table.userId),
+  index('audit_logs_action_idx').on(table.action),
+  index('audit_logs_created_at_idx').on(table.createdAt),
+  index('audit_logs_severity_idx').on(table.severity),
+]);
+
+// ============================================================================
 // 类型导出
 // ============================================================================
 
@@ -520,3 +574,6 @@ export type NewUserProgressRecord = typeof userProgress.$inferInsert;
 
 export type SiteSetting = typeof siteSettings.$inferSelect;
 export type NewSiteSetting = typeof siteSettings.$inferInsert;
+
+export type AuditLog = typeof auditLogs.$inferSelect;
+export type NewAuditLog = typeof auditLogs.$inferInsert;

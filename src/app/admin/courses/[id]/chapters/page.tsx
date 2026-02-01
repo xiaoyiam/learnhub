@@ -163,6 +163,13 @@ export default function ChaptersPage({
 
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
+                    <span className={`px-1.5 py-0.5 rounded text-xs ${
+                      chapter.type === 'article'
+                        ? 'bg-purple-100 text-purple-600'
+                        : 'bg-blue-100 text-blue-600'
+                    }`}>
+                      {chapter.type === 'article' ? '图文' : '视频'}
+                    </span>
                     <span className="font-medium text-gray-900">{chapter.title}</span>
                     {chapter.isFree && (
                       <span className="px-2 py-0.5 bg-green-100 text-green-600 rounded text-xs">
@@ -176,7 +183,7 @@ export default function ChaptersPage({
                 </div>
 
                 <div className="text-sm text-gray-500">
-                  {chapter.duration} 分钟
+                  {chapter.duration ? `${chapter.duration} 分钟` : '-'}
                 </div>
 
                 <div className="flex gap-2">

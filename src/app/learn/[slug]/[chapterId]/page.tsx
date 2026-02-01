@@ -1,11 +1,12 @@
 import Link from 'next/link';
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import { db } from '@/db';
-import { courses, chapters } from '@/db/schema';
+import { courses } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { checkCourseAccess } from '@/lib/actions/order';
 import { getSession } from '@/lib/auth';
 import { VideoPlayer } from './video-player';
+import { ArticleViewer } from './article-viewer';
 import { ChapterList } from './chapter-list';
 
 interface Props {
@@ -40,15 +41,12 @@ export default async function ChapterPage({ params }: Props) {
   let accessType: 'free' | 'course' | 'membership' | null = null;
 
   if (currentChapter.isFree) {
-    // 免费试看章节
     hasAccess = true;
     accessType = 'free';
   } else if (course.type === 'free') {
-    // 免费课程
     hasAccess = true;
     accessType = 'free';
   } else if (session?.user) {
-    // 检查用户权限
     const access = await checkCourseAccess(session.user.id, course.id);
     hasAccess = access.hasAccess;
     accessType = access.type || null;
@@ -60,6 +58,8 @@ export default async function ChapterPage({ params }: Props) {
   const nextChapter = currentIndex < course.chapters.length - 1
     ? course.chapters[currentIndex + 1]
     : null;
+
+  const isArticle = currentChapter.type === 'article';
 
   return (
     <main className="min-h-screen bg-gray-900 text-white">
@@ -82,51 +82,74 @@ export default async function ChapterPage({ params }: Props) {
       <div className="flex">
         {/* Main Content */}
         <div className="flex-1">
-          {/* Video Player */}
-          <div className="aspect-video bg-black">
-            {hasAccess ? (
-              <VideoPlayer
-                chapter={currentChapter}
-                courseId={course.id}
-                userId={session?.user?.id}
-              />
-            ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
-                <div className="text-6xl mb-4">🔒</div>
-                <h3 className="text-xl font-medium mb-2">需要购买后观看</h3>
-                <p className="text-gray-400 mb-6">
-                  登录并购买课程后即可观看完整内容
-                </p>
-                <div className="flex gap-3">
-                  {!session?.user ? (
-                    <Link
-                      href={`/auth/login?redirect=/learn/${slug}/${chapterId}`}
-                      className="px-6 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition"
-                    >
-                      登录
-                    </Link>
-                  ) : (
-                    <Link
-                      href={`/checkout?course=${course.id}`}
-                      className="px-6 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition"
-                    >
-                      购买课程
-                    </Link>
-                  )}
-                  <Link
-                    href={`/courses/${slug}`}
-                    className="px-6 py-2 border border-gray-600 rounded-lg hover:bg-gray-800 transition"
-                  >
-                    查看详情
-                  </Link>
-                </div>
+          {/* 内容区域 */}
+          {hasAccess ? (
+            isArticle ? (
+              // 图文内容
+              <div className="bg-gray-900 min-h-[50vh]">
+                <ArticleViewer
+                  chapter={{
+                    id: currentChapter.id,
+                    title: currentChapter.title,
+                    content: currentChapter.content,
+                    duration: currentChapter.duration,
+                  }}
+                  courseId={course.id}
+                  userId={session?.user?.id}
+                />
               </div>
-            )}
-          </div>
+            ) : (
+              // 视频内容
+              <div className="aspect-video bg-black">
+                <VideoPlayer
+                  chapter={currentChapter}
+                  courseId={course.id}
+                  userId={session?.user?.id}
+                />
+              </div>
+            )
+          ) : (
+            // 未授权
+            <div className={`${isArticle ? 'min-h-[50vh]' : 'aspect-video'} flex flex-col items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900`}>
+              <div className="text-6xl mb-4">🔒</div>
+              <h3 className="text-xl font-medium mb-2">需要购买后{isArticle ? '阅读' : '观看'}</h3>
+              <p className="text-gray-400 mb-6">
+                登录并购买课程后即可{isArticle ? '阅读' : '观看'}完整内容
+              </p>
+              <div className="flex gap-3">
+                {!session?.user ? (
+                  <Link
+                    href={`/auth/login?redirect=/learn/${slug}/${chapterId}`}
+                    className="px-6 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition"
+                  >
+                    登录
+                  </Link>
+                ) : (
+                  <Link
+                    href={`/checkout?course=${course.id}`}
+                    className="px-6 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition"
+                  >
+                    购买课程
+                  </Link>
+                )}
+                <Link
+                  href={`/courses/${slug}`}
+                  className="px-6 py-2 border border-gray-600 rounded-lg hover:bg-gray-800 transition"
+                >
+                  查看详情
+                </Link>
+              </div>
+            </div>
+          )}
 
           {/* Chapter Info */}
           <div className="p-6">
             <div className="flex items-center gap-2 mb-2">
+              <span className={`px-2 py-0.5 rounded text-xs ${
+                isArticle ? 'bg-purple-600' : 'bg-blue-600'
+              }`}>
+                {isArticle ? '图文' : '视频'}
+              </span>
               <span className="text-sm text-gray-400">
                 第 {currentIndex + 1} 章 / 共 {course.chapters.length} 章
               </span>
@@ -177,7 +200,10 @@ export default async function ChapterPage({ params }: Props) {
         {/* Sidebar - Chapter List */}
         <div className="w-80 bg-gray-800 border-l border-gray-700 hidden lg:block">
           <ChapterList
-            chapters={course.chapters}
+            chapters={course.chapters.map(c => ({
+              ...c,
+              type: c.type as 'video' | 'article',
+            }))}
             currentChapterId={chapterId}
             slug={slug}
             hasFullAccess={hasAccess && accessType !== 'free'}
