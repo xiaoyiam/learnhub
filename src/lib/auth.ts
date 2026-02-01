@@ -85,15 +85,33 @@ export async function signOut(): Promise<void> {
  * 获取当前会话
  */
 export async function getSession(): Promise<AuthResponse | null> {
-  const response = await fetch(`${AUTH_BASE_URL}/get-session`, {
-    method: 'GET',
-    credentials: 'include',
-  });
+  try {
+    // 检查环境变量
+    if (!AUTH_BASE_URL) {
+      console.error('NEXT_PUBLIC_NEON_AUTH_URL is not configured');
+      return null;
+    }
 
-  if (!response.ok) {
+    const response = await fetch(`${AUTH_BASE_URL}/get-session`, {
+      method: 'GET',
+      credentials: 'include',
+      cache: 'no-store',
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await response.json();
+
+    // 安全检查
+    if (!data || typeof data !== 'object') {
+      return null;
+    }
+
+    return data.session ? data : null;
+  } catch (error) {
+    console.error('Failed to get session:', error);
     return null;
   }
-
-  const data = await response.json();
-  return data.session ? data : null;
 }
