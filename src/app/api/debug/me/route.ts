@@ -24,16 +24,57 @@ export async function GET() {
       });
     }
 
-    // 2. 调用 Neon Auth 验证
-    const response = await fetch(`${AUTH_BASE_URL}/get-session`, {
+    // 2. 尝试多种方式调用 Neon Auth 验证
+    const cookieNames = [
+      'better-auth.session_token',
+      '__Secure-better-auth.session_token',
+      'session_token',
+      'neon_session',
+      '__session',
+    ];
+
+    let response;
+    let responseText = '';
+    let triedMethods: string[] = [];
+
+    // 方法1: 尝试不同的 cookie 名称
+    for (const cookieName of cookieNames) {
+      response = await fetch(`${AUTH_BASE_URL}/get-session`, {
+        method: 'GET',
+        headers: {
+          'Cookie': `${cookieName}=${sessionToken}`,
+        },
+        cache: 'no-store',
+      });
+      responseText = await response.text();
+      triedMethods.push(`Cookie ${cookieName}: ${response.status} - ${responseText.substring(0, 100)}`);
+
+      if (response.ok && responseText !== 'null' && responseText !== '{}') {
+        break;
+      }
+    }
+
+    // 方法2: 尝试 Authorization header
+    response = await fetch(`${AUTH_BASE_URL}/get-session`, {
       method: 'GET',
       headers: {
-        'Cookie': `better-auth.session_token=${sessionToken}`,
+        'Authorization': `Bearer ${sessionToken}`,
       },
       cache: 'no-store',
     });
+    responseText = await response.text();
+    triedMethods.push(`Auth Bearer: ${response.status} - ${responseText.substring(0, 100)}`);
 
-    const responseText = await response.text();
+    // 方法3: 尝试 x-session-token header
+    response = await fetch(`${AUTH_BASE_URL}/get-session`, {
+      method: 'GET',
+      headers: {
+        'x-session-token': sessionToken,
+      },
+      cache: 'no-store',
+    });
+    responseText = await response.text();
+    triedMethods.push(`x-session-token: ${response.status} - ${responseText.substring(0, 100)}`);
 
     if (!response.ok) {
       return NextResponse.json({
@@ -43,6 +84,7 @@ export async function GET() {
           status: response.status,
           authUrl: AUTH_BASE_URL,
           response: responseText.substring(0, 500),
+          triedMethods,
         }
       });
     }
@@ -66,6 +108,7 @@ export async function GET() {
         debug: {
           step: 'check_user',
           data: data,
+          triedMethods,
         }
       });
     }
