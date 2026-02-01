@@ -161,14 +161,32 @@ function checkCSRF(request: NextRequest): { valid: boolean; error?: string } {
  * 获取允许的来源列表
  */
 function getAllowedOrigins(): string[] {
-  const origins = [
-    process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-  ];
+  const origins: string[] = [];
+
+  // 添加配置的 APP URL
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    origins.push(process.env.NEXT_PUBLIC_APP_URL);
+  }
+
+  // 添加 Vercel 部署域名
+  if (process.env.VERCEL_URL) {
+    origins.push(`https://${process.env.VERCEL_URL}`);
+  }
 
   // 开发环境允许本地访问
   if (process.env.NODE_ENV === 'development') {
     origins.push('http://localhost:3000');
     origins.push('http://127.0.0.1:3000');
+  }
+
+  // 生产环境允许 Vercel 域名
+  if (process.env.NODE_ENV === 'production') {
+    origins.push('https://learnhub-one-mocha.vercel.app');
+  }
+
+  // 如果没有配置任何 origin，默认允许 localhost
+  if (origins.length === 0) {
+    origins.push('http://localhost:3000');
   }
 
   return origins;
