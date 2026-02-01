@@ -1,11 +1,12 @@
 'use server';
 
 import { db } from '@/db';
-import { siteSettings, orders, orderItems, licenses } from '@/db/schema';
+import { siteSettings, orders, orderItems, licenses, userProfiles, courses, membershipPlans } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '@/lib/admin-auth';
 import { getSession } from '@/lib/auth';
+import { EmailService, formatEmailDate, formatEmailAmount } from '@/lib/email';
 
 // ============ 支付设置类型 ============
 
@@ -104,6 +105,53 @@ export async function submitPaymentConfirmation(orderId: string, paymentMethod: 
     })
     .where(eq(orders.id, orderId));
 
+  // 发送邮件通知管理员
+  try {
+    // 获取订单商品信息
+    const items = await db.query.orderItems.findMany({
+      where: eq(orderItems.orderId, orderId),
+    });
+
+    // 获取商品名称
+    let productName = '未知商品';
+    if (items.length > 0) {
+      const item = items[0];
+      if (item.productType === 'course') {
+        const course = await db.query.courses.findFirst({
+          where: eq(courses.id, item.productId),
+        });
+        productName = course?.title || '课程';
+      } else if (item.productType === 'membership') {
+        const plan = await db.query.membershipPlans.findFirst({
+          where: eq(membershipPlans.id, item.productId),
+        });
+        productName = plan?.name || '会员套餐';
+      }
+    }
+
+    // 获取用户信息
+    const userProfile = await db.query.userProfiles.findFirst({
+      where: eq(userProfiles.userId, session.user.id),
+    });
+
+    // 获取管理员邮箱
+    const adminEmail = process.env.ADMIN_EMAIL;
+    if (adminEmail) {
+      await EmailService.sendOrderPendingConfirm(adminEmail, {
+        orderNo: order.orderNo || orderId.slice(0, 8).toUpperCase(),
+        userName: userProfile?.displayName || session.user.name || '用户',
+        userEmail: session.user.email || '',
+        productName,
+        amount: formatEmailAmount(order.totalAmount),
+        paymentMethod: paymentMethod === 'wechat' ? '微信支付' : '支付宝',
+        createdAt: formatEmailDate(order.createdAt),
+      });
+    }
+  } catch (error) {
+    // 邮件发送失败不影响主流程
+    console.error('Failed to send admin notification email:', error);
+  }
+
   revalidatePath('/orders');
   revalidatePath('/admin/orders');
   return { success: true };
@@ -160,6 +208,46 @@ export async function confirmPayment(orderId: string) {
         isActive: true,
       });
     }
+  }
+
+  // 发送支付成功邮件给用户
+  try {
+    // 获取用户信息
+    const userProfile = await db.query.userProfiles.findFirst({
+      where: eq(userProfiles.userId, order.userId),
+    });
+
+    // 获取商品名称
+    let productName = '未知商品';
+    if (order.items.length > 0) {
+      const item = order.items[0];
+      if (item.productType === 'course') {
+        const course = await db.query.courses.findFirst({
+          where: eq(courses.id, item.productId),
+        });
+        productName = course?.title || '课程';
+      } else if (item.productType === 'membership') {
+        const plan = await db.query.membershipPlans.findFirst({
+          where: eq(membershipPlans.id, item.productId),
+        });
+        productName = plan?.name || '会员套餐';
+      }
+    }
+
+    // 获取用户邮箱（从 neon auth 或 userProfile）
+    const userEmail = userProfile?.email;
+    if (userEmail) {
+      await EmailService.sendPaymentSuccess(userEmail, {
+        userName: userProfile?.displayName || '用户',
+        orderNo: order.orderNo || orderId.slice(0, 8).toUpperCase(),
+        productName,
+        amount: formatEmailAmount(order.totalAmount),
+        paidAt: formatEmailDate(new Date()),
+      });
+    }
+  } catch (error) {
+    // 邮件发送失败不影响主流程
+    console.error('Failed to send payment success email:', error);
   }
 
   revalidatePath('/admin/orders');

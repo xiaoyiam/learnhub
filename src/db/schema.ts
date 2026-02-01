@@ -140,7 +140,10 @@ export const userProfiles = pgTable('user_profiles', {
     .unique()
     .references(() => neonAuthUser.id, { onDelete: 'cascade' }),
   role: userRoleEnum('role').default('individual').notNull(),
+  displayName: varchar('display_name', { length: 100 }),  // 显示名称
+  email: varchar('email', { length: 255 }),  // 邮箱（冗余存储，方便查询）
   phone: varchar('phone', { length: 20 }),
+  avatar: text('avatar'),  // 头像 URL
   organizationId: uuid('organization_id'),  // 后面添加外键
   preferences: jsonb('preferences'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -148,6 +151,7 @@ export const userProfiles = pgTable('user_profiles', {
 }, (table) => [
   uniqueIndex('user_profiles_user_id_idx').on(table.userId),
   index('user_profiles_org_id_idx').on(table.organizationId),
+  index('user_profiles_email_idx').on(table.email),
 ]);
 
 // ============================================================================
