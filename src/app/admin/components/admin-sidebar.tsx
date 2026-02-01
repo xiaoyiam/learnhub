@@ -8,6 +8,7 @@ const navItems = [
   { href: '/admin/courses', label: '课程管理', icon: '📚' },
   { href: '/admin/orders', label: '订单管理', icon: '📦' },
   { href: '/admin/memberships', label: '会员套餐', icon: '👑' },
+  { href: '/admin/settings/payment', label: '支付设置', icon: '💳' },
 ];
 
 export default function AdminSidebar() {

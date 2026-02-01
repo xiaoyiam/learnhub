@@ -467,6 +467,24 @@ export const userProgressRelations = relations(userProgress, ({ one }) => ({
 }));
 
 // ============================================================================
+// 系统设置表
+// ============================================================================
+
+/**
+ * 系统设置表（键值对存储）
+ */
+export const siteSettings = pgTable('site_settings', {
+  id: uuid('id').default(sql`gen_random_uuid()`).primaryKey(),
+  key: varchar('key', { length: 100 }).notNull().unique(),
+  value: jsonb('value'),
+  description: varchar('description', { length: 500 }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex('site_settings_key_idx').on(table.key),
+]);
+
+// ============================================================================
 // 类型导出
 // ============================================================================
 
@@ -499,3 +517,6 @@ export type NewLicense = typeof licenses.$inferInsert;
 
 export type UserProgressRecord = typeof userProgress.$inferSelect;
 export type NewUserProgressRecord = typeof userProgress.$inferInsert;
+
+export type SiteSetting = typeof siteSettings.$inferSelect;
+export type NewSiteSetting = typeof siteSettings.$inferInsert;
