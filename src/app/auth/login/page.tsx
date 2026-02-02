@@ -14,26 +14,18 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // 调试：检查环境变量
-  const authUrl = process.env.NEXT_PUBLIC_NEON_AUTH_URL;
-  console.log('Auth URL configured:', authUrl ? 'Yes' : 'No', authUrl);
-
   const handleSubmit = async (e: React.FormEvent) => {
-    console.log('=== Form submitted ===');
     e.preventDefault();
     setLoading(true);
     setError('');
 
     try {
-      console.log('Attempting login for:', email);
       await signIn(email, password);
-      console.log('Login successful, redirecting...');
       // 跳转到 redirect 参数指定的页面，或默认首页
       const redirectTo = searchParams.get('redirect') || '/';
       router.push(redirectTo);
       router.refresh();
     } catch (err) {
-      console.error('Login error:', err);
       const errorMessage = err instanceof Error ? err.message : '登录失败，请重试';
       setError(errorMessage);
     } finally {
@@ -43,11 +35,6 @@ function LoginForm() {
 
   return (
     <>
-      {!authUrl && (
-        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 text-yellow-700 rounded-lg text-sm">
-          警告: NEXT_PUBLIC_NEON_AUTH_URL 环境变量未配置
-        </div>
-      )}
       {error && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
           {error}
