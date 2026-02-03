@@ -19,6 +19,7 @@ export function MarkdownEditor({
   const [uploading, setUploading] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mdFileInputRef = useRef<HTMLInputElement>(null);
 
   const insertText = (before: string, after: string = '') => {
     const textarea = textareaRef.current;
@@ -36,6 +37,35 @@ export function MarkdownEditor({
       textarea.focus();
       textarea.setSelectionRange(start + before.length, start + before.length + selectedText.length);
     }, 0);
+  };
+
+  const handleMdFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      if (content) {
+        // 如果已有内容，询问是否替换
+        if (value.trim()) {
+          if (confirm('当前编辑器已有内容，是否替换为上传的文件内容？')) {
+            onChange(content);
+          }
+        } else {
+          onChange(content);
+        }
+      }
+    };
+    reader.onerror = () => {
+      alert('文件读取失败');
+    };
+    reader.readAsText(file);
+
+    // 重置 input，允许重复上传同一文件
+    if (mdFileInputRef.current) {
+      mdFileInputRef.current.value = '';
+    }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -114,6 +144,20 @@ export function MarkdownEditor({
             accept="image/*"
             onChange={handleImageUpload}
             disabled={uploading}
+            className="hidden"
+          />
+        </label>
+        <span className="text-gray-300 mx-1">|</span>
+        <label
+          className="px-2 py-1 text-sm text-gray-600 hover:bg-gray-200 rounded transition cursor-pointer"
+          title="上传 Markdown 文件"
+        >
+          📄
+          <input
+            ref={mdFileInputRef}
+            type="file"
+            accept=".md,.markdown,.txt"
+            onChange={handleMdFileUpload}
             className="hidden"
           />
         </label>
